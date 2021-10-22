@@ -1,0 +1,289 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.w3.org/1999/xhtml">
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.0/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+
+    <title>Rooms booking</title>
+</head>
+
+<div th:replace="~{/fragments/header::header}">Header</div>
+
+<body style="background: #faf5dc">
+
+<div sec:authorize="isAuthenticated()" class="modal fade" id="modal-create-event" tabindex="-1" role="dialog" aria-labelledby="createEvent" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="createEvent">Create event</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form th:action="@{/calendar/save}" method="post" th:object="${eventDto}">
+                    <div class="form-group">
+                        <label for="title" class="col-form-label">Title:</label>
+                        <input required th:field="*{title}" type="text" maxlength="15" class="form-control" id="title">
+                    </div>
+                    <div class="form-group">
+                        <label for="description" class="col-form-label">Description:</label>
+                        <textarea th:field="*{description}" class="form-control" maxlength="150" id="description"></textarea>
+                    </div>
+                    <div style="margin-bottom: 25px" class="input-group">
+                        <label for="dateFrom" class="col-form-label">Date:</label>
+                        <div th:if="${dateError}">
+                            <div class="alert alert-danger col-xs-offset-1 col-xs-10">
+                                This date is already booked.
+                            </div>
+                        </div>
+                        <input th:value="(${currentDate} + 'T00:00')" required type="datetime-local" step="1800" min="0" max="1800" name="dateFrom" placeholder="date from" class="form-control" id="dateFrom">
+                        <input th:value="(${currentDate} + 'T01:00')"  required type="datetime-local" step="1800" min="0" max="1800" name="dateTo" placeholder="date to" class="form-control" id="dateTo">
+                    </div>
+                    <label class="col-form-label">Room:</label>
+                    <div aria-required="true" class="btn-group btn-group-toggle" data-toggle="buttons">
+                        <label class="btn btn-light btn-block active">
+                            <input th:field="*{room}" required value="Большая на первом" type="radio" name="options" id="room1"> Большая на первом
+                        </label>
+                        <label class="btn btn-light btn-block">
+                            <input th:field="*{room}" required value="Комната с пуфиками" type="radio" name="options" id="room2" > Комната с пуфиками
+                        </label>
+                        <label class="btn btn-light btn-block">
+                            <input th:field="*{room}" required value="Переговорка с проектором" type="radio" name="options" id="room3" > Переговорка с проектором
+                        </label>
+                    </div>
+                    <div class="form-group">
+                        <label for="author" class="col-form-label">Author:</label>
+                        <input readonly type="text" class="form-control" id="author">
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary">Create</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<nav aria-label="...">
+    <ul class="pager">
+        <li class="previous"><a href="#" th:href="@{/calendar/week/date(dateFrom=${startWeek.minusDays(7).format(fullDate)}, dateTo=${endWeek.minusDays(7).format(fullDate)})}"><span aria-hidden="true">&larr;</span> Previous week</a></li>
+        <li class="next"><a href="#" th:href="@{/calendar/week/date(dateFrom=${startWeek.plusDays(7).format(fullDate)}, dateTo=${endWeek.plusDays(7).format(fullDate)})}" > Next week <span aria-hidden="true">&rarr;</span></a></li>
+        <div sec:authorize="isAuthenticated()" class="container-fluid">
+            <button  type="button" role="button" class="btn btn-primary"
+                     data-toggle="modal" data-target="#modal-create-event"
+                     id="modalBut" style="cursor: pointer" data-whatever="event"
+            ><span class="glyphicon glyphicon-pushpin">  </span> BOOKING
+            </button>
+        </div>
+    </ul>
+</nav>
+
+
+
+<div sec:authorize="!isAuthenticated()" >
+    Please authorise. Push the "Login" or "Registration" button.
+</div>
+
+<table sec:authorize="isAuthenticated()" class="table table-hover table-bordered"
+       th:with="
+       monday=${startWeek},
+       tuesday=${startWeek.plusDays(1)},
+       wednesday=${startWeek.plusDays(2)},
+       thursday=${startWeek.plusDays(3)},
+       friday=${startWeek.plusDays(4)},
+       saturday=${startWeek.plusDays(5)},
+       sunday=${startWeek.plusDays(6)}"
+>
+    <thead class="thead-light">
+        <tr>
+            <th scope="col">Время<span class="d-block"></span> </th>
+
+            <th scope="col" th:with="monday=${startWeek}">
+                <p th:text="${monday.getDayOfWeek()}"></p>
+                <p th:text="${monday.format(date)}"></p>
+            </th>
+            <th scope="col">
+                <p th:text="${tuesday.getDayOfWeek()}"></p>
+                <p th:text="${tuesday.format(date)}"></p>
+            </th>
+            <th scope="col">
+                <p th:text="${wednesday.getDayOfWeek()}"></p>
+                <p th:text="${wednesday.format(date)}"></p>
+            </th>
+            <th scope="col">
+                <p th:text="${thursday.getDayOfWeek()}"></p>
+                <p th:text="${thursday.format(date)}"></p>
+            </th>
+            <th scope="col">
+                <p th:text="${friday.getDayOfWeek()}"></p>
+                <p th:text="${friday.format(date)}"></p>
+            </th>
+            <th scope="col">
+                <p th:text="${saturday.getDayOfWeek()}"></p>
+                <p th:text="${saturday.format(date)}"></p>
+            </th>
+            <th scope="col">
+                <p th:text="${sunday.getDayOfWeek()}"></p>
+                <p th:text="${sunday.format(date)}"></p>
+            </th>
+        </tr>
+    </thead>
+        <tbody th:each="time : ${times}">
+            <tr>
+                <th scope="row" th:text="${time.format(dayTime)}" style="width: 50px">Время дня</th>
+                    <td class="container" style="max-width: 150px">
+                        <div th:each="event : ${events}">
+                                        <a href="#" th:href="@{/calendar/event(id=${event.id})}" type="button" style="max-height: 50px; max-width: 150px"
+                                        th:if="
+                                            (${event.dateFrom.toLocalDate()} == ${monday.toLocalDate()}
+                                            and
+                                            ${event.dateFrom.getHour()} == ${time.getHour()})
+                                            or
+                                            (${event.dateFrom.toLocalDate()} == ${monday.toLocalDate()}
+                                            and
+                                            ${event.dateFrom.getHour()} < ${time.getHour()}
+                                            and
+                                            ${event.dateTo.getHour()} > ${time.getHour()})
+                                            "
+                                        class="btn btn-success btn-block text-truncate" th:text="${event.getTitle()}">
+                                    mondays event
+                                </a>
+                            </div>
+                    </td>
+
+                    <td class="container" style="max-width: 150px">
+                        <div th:each="event : ${events}">
+                            <a href="#" th:href="@{/calendar/event(id=${event.id})}" type="button" style="max-height: 50px; max-width: 150px"
+                               th:if="
+                                        (${event.dateFrom.toLocalDate()} == ${tuesday.toLocalDate()}
+                                        and
+                                        ${event.dateFrom.getHour()} == ${time.getHour()})
+                                        or
+                                        (${event.dateFrom.toLocalDate()} == ${tuesday.toLocalDate()}
+                                        and
+                                        ${event.dateFrom.getHour()} < ${time.getHour()}
+                                        and
+                                        ${event.dateTo.getHour()} > ${time.getHour()})
+                                        "
+                                     class="btn btn-success btn-block text-truncate" th:text="${event.getTitle()}">
+                                    tuesdays event
+                            </a>
+                        </div>
+                    </td>
+
+                    <td class="container" style="max-width: 150px">
+                        <div th:each="event : ${events}">
+                            <a href="#" th:href="@{/calendar/event(id=${event.id})}" type="button" style="max-height: 50px; max-width: 150px"
+                               th:if="
+                                        (${event.dateFrom.toLocalDate()} == ${wednesday.toLocalDate()}
+                                        and
+                                        ${event.dateFrom.getHour()} == ${time.getHour()})
+                                        or
+                                        (${event.dateFrom.toLocalDate()} == ${wednesday.toLocalDate()}
+                                        and
+                                        ${event.dateFrom.getHour()} < ${time.getHour()}
+                                        and
+                                        ${event.dateTo.getHour()} > ${time.getHour()})
+                                        "
+                                    class="btn btn-success btn-block text-truncate" th:text="${event.getTitle()}">
+                                tuesdays event
+                            </a>
+                        </div>
+                    </td>
+
+                    <td class="container" style="max-width: 150px">
+                        <div th:each="event : ${events}">
+                            <a href="#" th:href="@{/calendar/event(id=${event.id})}" type="button" style="max-height: 50px; max-width: 150px"
+                               th:if="
+                                        (${event.dateFrom.toLocalDate()} == ${thursday.toLocalDate()}
+                                        and
+                                        ${event.dateFrom.getHour()} == ${time.getHour()})
+                                        or
+                                        (${event.dateFrom.toLocalDate()} == ${thursday.toLocalDate()}
+                                        and
+                                        ${event.dateFrom.getHour()} < ${time.getHour()}
+                                        and
+                                        ${event.dateTo.getHour()} > ${time.getHour()})
+                                        "
+                                    class="btn btn-success btn-block text-truncate" th:text="${event.getTitle()}">
+                                thursdays event
+                            </a>
+                        </div>
+                    </td>
+
+                    <td class="container" style="max-width: 150px">
+                        <div th:each="event : ${events}">
+                            <a href="#" th:href="@{/calendar/event(id=${event.id})}" type="button" style="max-height: 50px; max-width: 150px"
+                               th:if="
+                                        (${event.dateFrom.toLocalDate()} == ${friday.toLocalDate()}
+                                        and
+                                        ${event.dateFrom.getHour()} == ${time.getHour()})
+                                        or
+                                        (${event.dateFrom.toLocalDate()} == ${friday.toLocalDate()}
+                                        and
+                                        ${event.dateFrom.getHour()} < ${time.getHour()}
+                                        and
+                                        ${event.dateTo.getHour()} > ${time.getHour()})
+                                        "
+                                    class="btn btn-success btn-block text-truncate" th:text="${event.getTitle()}">
+                                fridays event
+                            </a>
+                        </div>
+                    </td>
+
+                    <td class="container" style="max-width: 150px">
+                        <div th:each="event : ${events}">
+                            <a href="#" th:href="@{/calendar/event(id=${event.id})}" type="button" style="max-height: 50px; max-width: 150px"
+                               th:if="
+                                        (${event.dateFrom.toLocalDate()} == ${saturday.toLocalDate()}
+                                        and
+                                        ${event.dateFrom.getHour()} == ${time.getHour()})
+                                        or
+                                        (${event.dateFrom.toLocalDate()} == ${saturday.toLocalDate()}
+                                        and
+                                        ${event.dateFrom.getHour()} < ${time.getHour()}
+                                        and
+                                        ${event.dateTo.getHour()} > ${time.getHour()})
+                                        "
+                                    class="btn btn-success btn-block text-truncate" th:text="${event.getTitle()}">
+                                saturdays event
+                            </a>
+                        </div>
+                    </td>
+
+                    <td class="container" style="max-width: 150px">
+                        <div th:each="event : ${events}">
+                            <a href="#" th:href="@{/calendar/event(id=${event.id})}" type="button" style="max-height: 50px; max-width: 150px"
+                               th:if="
+                                        (${event.dateFrom.toLocalDate()} == ${sunday.toLocalDate()}
+                                        and
+                                        ${event.dateFrom.getHour()} == ${time.getHour()})
+                                        or
+                                        (${event.dateFrom.toLocalDate()} == ${sunday.toLocalDate()}
+                                        and
+                                        ${event.dateFrom.getHour()} < ${time.getHour()}
+                                        and
+                                        ${event.dateTo.getHour()} > ${time.getHour()})
+                                        "
+                                    class="btn btn-success btn-block text-truncate" th:text="${event.getTitle()}">
+                                sundays event
+                            </a>
+                        </div>
+                    </td>
+            </tr>
+        </tbody>
+</table>
+
+<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+</body>
+</html>

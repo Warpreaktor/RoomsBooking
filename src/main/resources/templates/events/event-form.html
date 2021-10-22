@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.w3.org/1999/xhtml">
+<html lang="en">
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.0/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+
+    <title>Rooms booking</title>
+</head>
+<body style="background: aliceblue">
+<div class="container" th:replace="~{/fragments/header::header}">Header</div>
+
+    <form th:action="@{/calendar/save}" method="post" th:object="${eventDto}">
+        <div class="form-group" hidden="true">
+            <label for="id" class="col-form-label">Id:</label>
+            <input th:field="*{id}" type="number" class="form-control" id="id">
+        </div>
+        <div class="form-group">
+            <label for="title" class="col-form-label">Title:</label>
+            <input required th:field="*{title}" type="text" class="form-control" id="title">
+        </div>
+        <div class="form-group">
+            <label for="description" class="col-form-label">Description:</label>
+            <textarea th:field="*{description}" class="form-control" id="description"></textarea>
+        </div>
+        <div style="margin-bottom: 25px" class="input-group">
+            <label for="dateFrom" class="col-form-label">Date:</label>
+            <div th:if="${dateError}">
+                <div class="alert alert-danger col-xs-offset-1 col-xs-10">
+                    This date is already booked. Try to choose another dates or room.
+                </div>
+            </div>
+            <div th:if="${dateFromGreaterThanError}">
+                <div class="alert alert-danger col-xs-offset-1 col-xs-10">
+                    This "date from" greater than "date to". Try to choose another "date to".
+                </div>
+            </div>
+            <input th:field="*{dateFrom}" required type="datetime-local" step="1800" min="0" max="1800" name="dateFrom" placeholder="date from" class="form-control" id="dateFrom">
+            <input th:field="*{dateTo}" required type="datetime-local" step="1800" min="0" max="1800" name="dateTo" placeholder="date to" class="form-control" id="dateTo">
+        </div>
+        <div class="form-group">
+            <label for="roomRead" class="col-form-label">Booked room:</label>
+            <label readonly th:text="*{room}" type="text" class="form-control" id="roomRead"></label>
+        </div>
+        <label class="col-form-label">Change room:</label>
+        <div aria-required="true" class="btn-group btn-group-toggle" data-toggle="buttons">
+            <label class="btn btn-light btn-block active">
+                <input th:field="*{room}" required value="Большая на первом" type="radio" name="options" id="room1"> Большая на первом
+            </label>
+            <label class="btn btn-light btn-block">
+                <input th:field="*{room}" required value="Комната с пуфиками" type="radio" name="options" id="room2" > Комната с пуфиками
+            </label>
+            <label class="btn btn-light btn-block">
+                <input th:field="*{room}" required value="Переговорка с проектором" type="radio" name="options" id="room3" > Переговорка с проектором
+            </label>
+        </div>
+        <div class="form-group">
+            <label for="author" class="col-form-label">Author:</label>
+            <input readonly th:value="*{author}" type="text" class="form-control" id="author">
+        </div>
+        <div class="modal-footer">
+            <a type="button" href="#" th:href="@{/calendar}" class="btn btn-secondary" data-dismiss="modal">Back</a>
+            <a th:if="${userName} == *{author}" type="button" href="#" th:href="@{/calendar/event/delete(id=*{id})}" class="btn btn-danger" data-tab="modal">Delete</a>
+            <button th:if="${userName} == *{author}" type="submit" class="btn btn-primary">Save changes</button>
+        </div>
+    </form>
+</div>
+<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+</body>
+</html>
