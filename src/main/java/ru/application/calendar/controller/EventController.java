@@ -148,8 +148,18 @@ public class EventController {
     public String saveEvent(Model model, EventDto eventDto) {
         String userName = SecurityContextHolder.getContext().getAuthentication().getName();
         eventDto.setAuthor(userName);
-        if (LocalDateTime.parse(eventDto.getDateFrom()).isAfter(LocalDateTime.parse(eventDto.getDateTo())) ){
+        LocalDateTime dateFrom = LocalDateTime.parse(eventDto.getDateFrom());
+        LocalDateTime dateTo = LocalDateTime.parse(eventDto.getDateTo());
+
+        if (dateFrom.isAfter(dateTo) ){
             model.addAttribute("dateFromGreaterThanError", true);
+            model.addAttribute("eventDto", eventDto);
+            model.addAttribute("userName", userName);
+            model.addAttribute("rooms", roomService.findAll());
+            return "/events/event-form";
+        }
+        if (dateFrom.isBefore(dateTo.plusDays(1).plusSeconds(1)) ){
+            model.addAttribute("greaterThan24hError", true);
             model.addAttribute("eventDto", eventDto);
             model.addAttribute("userName", userName);
             model.addAttribute("rooms", roomService.findAll());

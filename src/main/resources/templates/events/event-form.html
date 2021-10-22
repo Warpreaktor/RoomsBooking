@@ -41,6 +41,11 @@
                     This "date from" greater than "date to". Try to choose another "date to".
                 </div>
             </div>
+            <div th:if="${greaterThan24hError}">
+                <div class="alert alert-danger col-xs-offset-1 col-xs-10">
+                    You cannot book a room for more than 24 hours.
+                </div>
+            </div>
             <input th:field="*{dateFrom}" required type="datetime-local" step="1800" min="0" max="1800" name="dateFrom" placeholder="date from" class="form-control" id="dateFrom">
             <input th:field="*{dateTo}" required type="datetime-local" step="1800" min="0" max="1800" name="dateTo" placeholder="date to" class="form-control" id="dateTo">
         </div>
